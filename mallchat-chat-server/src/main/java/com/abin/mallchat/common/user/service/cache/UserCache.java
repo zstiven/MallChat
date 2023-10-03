@@ -39,6 +39,8 @@ public class UserCache {
     private RoleDao roleDao;
     @Autowired
     private UserRoleDao userRoleDao;
+    @Autowired
+    private UserSummaryCache userSummaryCache;
 
     public Long getOnlineNum() {
         String onlineKey = RedisKey.getKey(RedisKey.ONLINE_UID_ZET);
@@ -121,15 +123,19 @@ public class UserCache {
      * 获取用户信息，盘路缓存模式
      */
     public Map<Long, User> getUserInfoBatch(Set<Long> uids) {
+        //批量组装key
         List<String> keys = uids.stream().map(a -> RedisKey.getKey(RedisKey.USER_INFO_STRING, a)).collect(Collectors.toList());
+        //批量get
         List<User> mget = RedisUtils.mget(keys, User.class);
         Map<Long, User> map = mget.stream().filter(Objects::nonNull).collect(Collectors.toMap(User::getId, Function.identity()));
-        //还需要load更新的uid
+        //发现差集——还需要load更新的uid
         List<Long> needLoadUidList = uids.stream().filter(a -> !map.containsKey(a)).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(needLoadUidList)) {
+            //批量load
             List<User> needLoadUserList = userDao.listByIds(needLoadUidList);
             Map<String, User> redisMap = needLoadUserList.stream().collect(Collectors.toMap(a -> RedisKey.getKey(RedisKey.USER_INFO_STRING, a.getId()), Function.identity()));
             RedisUtils.mset(redisMap, 5 * 60);
+            //加载回redis
             map.putAll(needLoadUserList.stream().collect(Collectors.toMap(User::getId, Function.identity())));
         }
         return map;
@@ -137,6 +143,8 @@ public class UserCache {
 
     public void userInfoChange(Long uid) {
         delUserInfo(uid);
+        //删除UserSummaryCache，前端下次懒加载的时候可以获取到最新的数据
+        userSummaryCache.delete(uid);
         refreshUserModifyTime(uid);
     }
 

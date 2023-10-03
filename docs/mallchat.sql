@@ -70,28 +70,6 @@ CREATE TABLE `message_mark`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '消息标记表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Table structure for room
--- ----------------------------
-DROP TABLE IF EXISTS `room`;
-CREATE TABLE `room`  (
-  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'id',
-  `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '会话名',
-  `type` int(11) NOT NULL COMMENT '会话类型 1大群聊 2沸点',
-  `active_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '最后活跃时间-排序',
-  `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
-  `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '修改时间',
-  PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_active_time`(`active_time`) USING BTREE,
-  INDEX `idx_create_time`(`create_time`) USING BTREE,
-  INDEX `idx_update_time`(`update_time`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '会话表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of room
--- ----------------------------
-INSERT INTO `room` VALUES (1, '抹茶群聊', 1, '2023-03-25 22:30:07.328', '2023-03-25 22:30:07.328', '2023-03-25 22:30:07.328');
-
--- ----------------------------
 -- Table structure for user
 -- ----------------------------
 DROP TABLE IF EXISTS `user`;
@@ -115,8 +93,8 @@ CREATE TABLE `user` (
   KEY `idx_update_time` (`update_time`) USING BTREE,
   KEY `idx_active_status_last_opt_time` (`active_status`,`last_opt_time`)
 ) ENGINE=InnoDB AUTO_INCREMENT=20000 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC COMMENT='用户表';
-INSERT INTO `mallchat`.`user` (`id`, `name`, `avatar`, `sex`, `open_id`, `last_opt_time`, `ip_info`, `item_id`, `status`, `create_time`, `update_time`) VALUES (10001, 'ChatGPT', 'https://img1.baidu.com/it/u=3613958228,3522035000&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500', 0, '??', '2023-06-29 17:03:03.357', NULL, NULL, 0, '2023-06-29 17:03:03.357', '2023-07-01 14:56:10.271');
-INSERT INTO `mallchat`.`user` (`id`, `name`, `avatar`, `sex`, `open_id`, `last_opt_time`, `ip_info`, `item_id`, `status`, `create_time`, `update_time`) VALUES (10002, 'ChatGLM2', 'http://mms1.baidu.com/it/u=1979830414,2984779047&fm=253&app=138&f=JPEG&fmt=auto&q=75?w=500&h=500', NULL, '450', '2023-07-01 11:58:24.605', NULL, NULL, 0, '2023-07-01 11:58:24.605', '2023-07-01 12:02:56.900');
+INSERT INTO `user` (`id`, `name`, `avatar`, `sex`, `open_id`, `last_opt_time`, `ip_info`, `item_id`, `status`, `create_time`, `update_time`) VALUES (10001, 'ChatGPT', 'https://img1.baidu.com/it/u=3613958228,3522035000&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500', 0, '??', '2023-06-29 17:03:03.357', NULL, NULL, 0, '2023-06-29 17:03:03.357', '2023-07-01 14:56:10.271');
+INSERT INTO `user` (`id`, `name`, `avatar`, `sex`, `open_id`, `last_opt_time`, `ip_info`, `item_id`, `status`, `create_time`, `update_time`) VALUES (10002, 'ChatGLM2', 'http://mms1.baidu.com/it/u=1979830414,2984779047&fm=253&app=138&f=JPEG&fmt=auto&q=75?w=500&h=500', NULL, '450', '2023-07-01 11:58:24.605', NULL, NULL, 0, '2023-07-01 11:58:24.605', '2023-07-01 12:02:56.900');
 -- ----------------------------
 -- Table structure for user_backpack
 -- ----------------------------
@@ -218,7 +196,8 @@ CREATE TABLE `user_apply` (
   `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
   `update_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '修改时间',
   PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_target_id_uid_status` (`target_id`,`uid`,`status`) USING BTREE,
+  KEY `idx_uid_target_id` (`uid`,`target_id`) USING BTREE,
+  KEY `idx_target_id_read_status` (`target_id`,`read_status`) USING BTREE,
   KEY `idx_target_id` (`target_id`) USING BTREE,
   KEY `idx_create_time` (`create_time`) USING BTREE,
   KEY `idx_update_time` (`update_time`) USING BTREE
@@ -284,7 +263,7 @@ CREATE TABLE `room_group` (
 DROP TABLE IF EXISTS `group_member`;
 CREATE TABLE `group_member` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
-  `group_id` bigint(20) NOT NULL COMMENT '群主id',
+  `group_id` bigint(20) NOT NULL COMMENT '群组id',
   `uid` bigint(20) NOT NULL COMMENT '成员uid',
   `role` int(11) NOT NULL COMMENT '成员角色 1群主 2管理员 3普通成员',
   `create_time` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',

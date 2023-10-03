@@ -6,7 +6,6 @@ import com.abin.mallchat.common.chat.domain.entity.Message;
 import com.abin.mallchat.common.chat.domain.entity.msg.MessageExtra;
 import com.abin.mallchat.common.chat.domain.entity.msg.MsgRecall;
 import com.abin.mallchat.common.chat.domain.enums.MessageTypeEnum;
-import com.abin.mallchat.common.chat.domain.vo.request.ChatMessageReq;
 import com.abin.mallchat.common.chat.service.cache.MsgCache;
 import com.abin.mallchat.common.common.event.MessageRecallEvent;
 import com.abin.mallchat.common.user.domain.entity.User;
@@ -24,7 +23,7 @@ import java.util.Objects;
  * Date: 2023-06-04
  */
 @Component
-public class RecallMsgHandler extends AbstractMsgHandler {
+public class RecallMsgHandler extends AbstractMsgHandler<Object> {
     @Autowired
     private MessageDao messageDao;
     @Autowired
@@ -40,23 +39,17 @@ public class RecallMsgHandler extends AbstractMsgHandler {
     }
 
     @Override
-    public void checkMsg(ChatMessageReq request, Long uid) {
+    public void saveMsg(Message msg, Object body) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void saveMsg(Message msg, ChatMessageReq request) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object showMsg(Message msg) {//todo 后期让前端来做
+    public Object showMsg(Message msg) {
         MsgRecall recall = msg.getExtra().getRecall();
+        User userInfo = userCache.getUserInfo(recall.getRecallUid());
         if (!Objects.equals(recall.getRecallUid(), msg.getFromUid())) {
-            User userInfo = userCache.getUserInfo(recall.getRecallUid());
             return "管理员\"" + userInfo.getName() + "\"撤回了一条成员消息";
         }
-        User userInfo = userCache.getUserInfo(msg.getFromUid());
         return "\"" + userInfo.getName() + "\"撤回了一条消息";
     }
 
